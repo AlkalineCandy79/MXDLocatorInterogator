@@ -4,9 +4,9 @@
 #
 # Author:      John Spence
 #
-# Created:      23 Feb 2020
-# Modified:
-# Modification Purpose:
+# Created:  23 February 2020
+# Modified: 24 February 2020
+# Modification Purpose: Call me bug hunter.  
 #
 #
 #
@@ -29,7 +29,7 @@ data_store_path_MXD = r'E:\ScriptTesting'
 inCsv = r'E:\ScriptTesting'
 #
 # File Name Pre-Fix for the Output
-fileprefix = 'Drive_'
+fileprefix = 'VDrive_'
 #
 # ------------------------------------------------------------------------------
 # DO NOT UPDATE BELOW THIS LINE OR RISK DOOM AND DISPAIR!  Have a nice day!
@@ -63,29 +63,20 @@ def dirWalk():
         for filenames in [f for f in filenames if f.endswith(".mxd")]:
             print ("Target found:  " + os.path.join(dirpath,filenames))
             data_path_MXD = dirpath
-            findMXD (data_path_MXD, inCsv)
 
-    return
+            doc = filenames
 
+            mxd_service_name = doc
+            name = mxd_service_name.replace('.mxd', '')
+            currentDT = datetime.datetime.now()
+            print ("Sources Task Started:  " + str(currentDT))
+            print ("Source name:  " + name)
+            doc = data_path_MXD + '\\' + doc
+            print ("File path:  " + doc)
 
-def findMXD(data_path_MXD, inCsv):
-# ------------------------------------------------------------------------------
-# Process directory looking for *.mxd files
-# ------------------------------------------------------------------------------
-
-    mxdfiles = [f for f in listdir(data_path_MXD) if f.endswith(".mxd")]
-    for mxd in mxdfiles:
-        mxd_service_name = mxd
-        name = mxd_service_name.replace('.mxd', '')
-        currentDT = datetime.datetime.now()
-        print ("Sources Task Started:  " + str(currentDT))
-        print ("Source name:  " + name)
-        doc = data_path_MXD + '\\' + mxd
-        print (doc)
-
-        mxdInfo(doc, mxd_service_name, inCsv, data_path_MXD)
-        currentDT = datetime.datetime.now()
-        print ("Sources Task Completed:  " + str(currentDT) + "\n")
+            mxdInfo(doc, mxd_service_name, inCsv, data_path_MXD)
+            currentDT = datetime.datetime.now()
+            print ("Sources Task Completed:  " + str(currentDT) + "\n")
 
     return
 
@@ -104,72 +95,128 @@ def mxdInfo(doc, mxd_service_name, inCsv, data_path_MXD):
 
     for frame in df:
 
-        if len(arcpy.mapping.ListLayers(mxd, '', frame))>0:
+        if frame <> None:
 
-            print ('\nLayers:')
+            mxd_frame = frame.name
 
-            for lyr in arcpy.mapping.ListLayers(mxd, '', frame):
-                try:
-                    print (lyr.name)
-                    mxd_lyr_name = lyr.name
-                except Exception as error_pull:
-                    print "Status:  Failure!"
-                    print(error_pull.args[0])
-                    mxd_lyr_name = 'N/A'
-                try:
-                    mxd_lyr_datasetName = lyr.datasetName
-                except Exception as error_pull:
-                    print "Status:  Failure!"
-                    print(error_pull.args[0])
-                    mxd_lyr_datasetName = 'N/A'
-                try:
-                    print (lyr.dataSource)
-                    mxd_lyr_source = lyr.dataSource
-                except:
-                    mxd_lyr_source = 'Can not pull source'
-                try:
-                    print (lyr.definitionQuery)
-                    ldquery = lyr.definitionQuery
-                except:
-                    ldquery = 'None'
-                print (lyr.isBroken)
-                mxd_lyr_isBroken = lyr.isBroken
+            print ('Frame:  ' + mxd_frame)
 
-                if lyr.isBroken == True:
-                    serverName = 'None'
-                    serviceName = 'None'
-                    dbName = 'None'
-                    userName = 'None'
-                    authMode = 'None'
-                    dbName = 'None'
-                    verName = 'None'
-                else:
+            if len(arcpy.mapping.ListLayers(mxd, '', frame))>0:
+
+                print ('\nLayers:')
+
+                for lyr in arcpy.mapping.ListLayers(mxd, '', frame):
                     try:
-                        servProp = lyr.serviceProperties
-                        layerType = servProp.get('ServiceType', 'None')
-                        if layerType == 'SDE':
-                            dbName = servProp.get('Database', 'None')
-                            serviceName = servProp.get('Service', 'None')
-                            if serviceName <> 'N/A':
-                                serverDetails = serviceName.split(':')
-                                serverName = serverDetails[2]
-                            else:
-                                serverName = 'N/A'
-                            userName = servProp.get('UserName', 'None')
-                            authMode = servProp.get('AuthenticationMode', 'None')
-                            verName = servProp.get('Version', 'None')
+                        print (lyr.name)
+                        mxd_lyr_name = lyr.name
+                        print ('Pulled Layer Name')
+                    except Exception as error_pull:
+                        print "Status:  Failure!"
+                        print(error_pull.args[0])
+                        mxd_lyr_name = 'N/A'
+                    try:
+                        mxd_lyr_datasetName = lyr.datasetName
+                        print (lyr.datasetName)
+                        print ('Pulled Data Set Name')
+                    except Exception as error_pull:
+                        print "Status:  Failure!"
+                        print(error_pull.args[0])
+                        mxd_lyr_datasetName = 'N/A'
+                    try:
+                        print (lyr.dataSource)
+                        print ('Pulled Data Source')
+                        mxd_lyr_source = lyr.dataSource
                     except:
-                        'Pull failed.'
+                        mxd_lyr_source = 'Can not pull source'
+                    try:
+                        print (lyr.definitionQuery)
+                        ldquery = lyr.definitionQuery
+                        if ldquery == None:
+                            ldquery = ''
+                        print ('Pulled Def Query')
+                    except:
+                        ldquery = 'None'
+                    print (lyr.isBroken)
+                    mxd_lyr_isBroken = lyr.isBroken
 
+                    if lyr.isBroken == True:
+                        serverName = 'None'
+                        serviceName = 'None'
+                        dbName = 'None'
+                        userName = 'None'
+                        authMode = 'None'
+                        verName = 'None'
+                        mxd_lyr_isBroken = 'Yes'
+                    else:
+                        try:
+                            servProp = lyr.serviceProperties
+                        except:
+                            servProp = 'None'
+                        try:
+                            layerType = servProp.get('ServiceType', 'None')
+                            if layerType == 'SDE':
+                                dbName = servProp.get('Database', 'None')
+                                serviceName = servProp.get('Service', 'None')
+                                if serviceName <> 'N/A':
+                                    print ('Server Details')
+                                    serverDetails = serviceName.split(':')
+                                    serverName = serverDetails[2]
+                                else:
+                                    serverName = 'N/A'
+                        except:
+                            layerType = 'None'
+                            dbName = 'None'
+                            serviceName = 'None'
+                            serverDetails = 'None'
+                        try:
+                            userName = servProp.get('UserName', 'None')
+                        except:
+                            userName = 'None'
+                        try:
+                            authMode = servProp.get('AuthenticationMode', 'None')
+                        except:
+                            authMode = 'None'
+                        try:
+                            verName = servProp.get('Version', 'None')
+                        except:
+                            verName = 'None'
+                        mxd_lyr_isBroken = 'No'
+
+
+                    #write out to csv
+                    if not os.path.isfile(inCsv):
+                        csvFile = open(inCsv, 'wb')
+                        try:
+                            writer = csv.writer(csvFile)
+                            writer.writerow(('MXD', 'Data Frame', 'MXD Layer Name', 'Stored Layer Name', 'Definition Query', 'Broken Layer', 'Layer Source', 'Server', 'Database', 'Auth Method',
+                                             'User Name', 'Version', 'MXD Path', 'Completed'))
+                            writer.writerow((mxd_service_name, mxd_frame, mxd_lyr_name, mxd_lyr_datasetName, ldquery, mxd_lyr_isBroken, mxd_lyr_source, serverName, dbName, authMode,
+                                             userName, verName, data_path_MXD, str(datetime.datetime.now())))
+                        except Exception as error_write:
+                            print "Status:  Failure!"
+                            print(error_write.args[0])
+                            print "error writing first row of csv"
+                    else:
+                        csvFile = open(inCsv, 'ab')
+                        try:
+                            writer = csv.writer(csvFile)
+                            writer.writerow((mxd_service_name, mxd_frame, mxd_lyr_name, mxd_lyr_datasetName, ldquery, mxd_lyr_isBroken, mxd_lyr_source, serverName, dbName, authMode,
+                                             userName, verName, data_path_MXD, str(datetime.datetime.now())))
+                        except Exception as error_write:
+                            print "Status:  Failure!"
+                            print(error_write.args[0])
+
+            else:
                 #write out to csv
+                print ('Bypassed')
                 if not os.path.isfile(inCsv):
                     csvFile = open(inCsv, 'wb')
                     try:
                         writer = csv.writer(csvFile)
-                        writer.writerow(('MXD', 'MXD Layer Name', 'Stored Layer Name', 'Definition Query', 'Broken Layer', 'Layer Source', 'Server', 'Database', 'Auth Method',
-                                         'User Name', 'Version', 'MXD Path'))
-                        writer.writerow((mxd_service_name, mxd_lyr_name, mxd_lyr_datasetName, ldquery, mxd_lyr_isBroken, mxd_lyr_source, serverName, dbName, authMode,
-                                         userName, verName, data_path_MXD))
+                        writer.writerow(('MXD', 'Data Frame', 'MXD Layer Name', 'Stored Layer Name', 'Definition Query', 'Broken Layer', 'Layer Source', 'Server', 'Database', 'Auth Method',
+                                         'User Name', 'Version', 'MXD Path', 'Completed'))
+                        writer.writerow((mxd_service_name, mxd_frame, 'None', 'None', 'None', 'None', 'None', 'None', 'None', 'None',
+                                         'None', 'None', data_path_MXD, str(datetime.datetime.now())))
                     except Exception as error_write:
                         print "Status:  Failure!"
                         print(error_write.args[0])
@@ -178,37 +225,11 @@ def mxdInfo(doc, mxd_service_name, inCsv, data_path_MXD):
                     csvFile = open(inCsv, 'ab')
                     try:
                         writer = csv.writer(csvFile)
-                        writer.writerow((mxd_service_name, mxd_lyr_name, mxd_lyr_datasetName, ldquery, mxd_lyr_isBroken, mxd_lyr_source, serverName, dbName, authMode,
-                                         userName, verName, data_path_MXD))
+                        writer.writerow((mxd_service_name, mxd_frame, 'None', 'None', 'None', 'None', 'None', 'None', 'None', 'None',
+                                         'None', 'None', data_path_MXD, str(datetime.datetime.now())))
                     except Exception as error_write:
                         print "Status:  Failure!"
                         print(error_write.args[0])
-
-        else:
-            #write out to csv
-            if not os.path.isfile(inCsv):
-                csvFile = open(inCsv, 'wb')
-                try:
-                    writer = csv.writer(csvFile)
-                    writer.writerow(('MXD', 'MXD Layer Name', 'Stored Layer Name', 'Definition Query', 'Broken Layer', 'Layer Source', 'Server', 'Database', 'Auth Method',
-                                     'User Name', 'Version', 'MXD Path'))
-                    writer.writerow((mxd_service_name, 'None', 'None', 'None', 'None', 'None', 'None', 'None', 'None',
-                                     'None', 'None', data_path_MXD))
-                except Exception as error_write:
-                    print "Status:  Failure!"
-                    print(error_write.args[0])
-                    print "error writing first row of csv"
-            else:
-                csvFile = open(inCsv, 'ab')
-                try:
-                    writer = csv.writer(csvFile)
-                    writer.writerow((mxd_service_name, 'None', 'None', 'None', 'None', 'None', 'None', 'None', 'None',
-                                     'None', 'None', data_path_MXD))
-                except Exception as error_write:
-                    print "Status:  Failure!"
-                    print(error_write.args[0])
-
-    del mxd
 
     return
 
